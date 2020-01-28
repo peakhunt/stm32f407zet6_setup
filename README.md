@@ -13,3 +13,6 @@ R29 should be soldered.
 C17/C18 should be soldered.  
 
 ## LCD
+ILI9341  
+32Pin
+320x240

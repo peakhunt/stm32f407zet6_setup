@@ -65,7 +65,7 @@ test_sram(void)
   //
   static volatile uint8_t*    base = (uint8_t*)BASER_ADDRESS;
   static volatile uint8_t*    current = (uint8_t*)BASER_ADDRESS;;
-  const uint32_t              bytes_to_test = 1024 * 500;
+  const uint32_t              bytes_to_test = 1024 * 250;
   uint32_t                    i;
   uint8_t                     target;
 
