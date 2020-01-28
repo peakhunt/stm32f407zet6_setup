@@ -1,12 +1,13 @@
 #MicroXplorer Configuration settings - do not modify
-FSMC.AddressSetupTime1=11
-FSMC.BusTurnAroundDuration1=4
+FSMC.AccessMode1=FSMC_ACCESS_MODE_A
+FSMC.AddressSetupTime1=9
+FSMC.BusTurnAroundDuration1=2
 FSMC.DataSetupTime1=1
-FSMC.ExtendedAddressSetupTime1=0
-FSMC.ExtendedBusTurnAroundDuration1=4
-FSMC.ExtendedDataSetupTime1=7
+FSMC.ExtendedAddressSetupTime1=6
+FSMC.ExtendedBusTurnAroundDuration1=2
+FSMC.ExtendedDataSetupTime1=4
 FSMC.ExtendedMode1=FSMC_EXTENDED_MODE_ENABLE
-FSMC.IPParameters=WriteOperation1,ExtendedMode1,AddressSetupTime1,DataSetupTime1,BusTurnAroundDuration1,ExtendedAddressSetupTime1,ExtendedDataSetupTime1,ExtendedBusTurnAroundDuration1
+FSMC.IPParameters=WriteOperation1,ExtendedMode1,AddressSetupTime1,DataSetupTime1,BusTurnAroundDuration1,AccessMode1,ExtendedDataSetupTime1,ExtendedAddressSetupTime1,ExtendedBusTurnAroundDuration1
 FSMC.WriteOperation1=FSMC_WRITE_OPERATION_ENABLE
 File.Version=6
 GPIO.groupedBy=Group By Peripherals
