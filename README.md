@@ -7,6 +7,7 @@ e) 8Mhz external crystal
 
 ## external SRAM
 IS62WV51216BLL  
+a) connected to FSMC via Bank1/CS3  
 
 R29 should be soldered.  
 C17/C18 should be soldered.  
