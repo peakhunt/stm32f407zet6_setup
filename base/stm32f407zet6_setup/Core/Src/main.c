@@ -96,6 +96,46 @@ test_sram(void)
   HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
 }
 
+static void
+test_sram_16(void)
+{
+  #define BASER_ADDRESS           0x68000000    // Bank-1 CS3
+  //
+  // we have 1MB sram controlled by NE3
+  //
+  static volatile uint16_t*   base = (uint16_t*)BASER_ADDRESS;
+  static volatile uint16_t*   current = (uint16_t*)BASER_ADDRESS;;
+  const uint32_t              bytes_to_test = 1024 * 250;
+  uint32_t                    i;
+  uint16_t                    target;
+
+  for (i = 0; i < bytes_to_test; i++)
+  {
+    if ((current - base) >= (1024 * 1024))
+    {
+      current = base;
+    }
+
+    target = (uint16_t)(i % (0xffffU + 1));
+
+    // write
+    *current = target;
+
+    // read back
+    if (*current != target)
+    {
+      // error
+      while(1)
+      {
+        HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
+        HAL_Delay(100);
+      }
+    }
+    current++;
+  }
+  HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -148,6 +188,7 @@ int main(void)
     HAL_Delay(50);
 #else
     test_sram();
+    test_sram_16();
 #endif
   }
   /* USER CODE END 3 */
