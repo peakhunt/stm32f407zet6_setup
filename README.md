@@ -16,3 +16,4 @@ C17/C18 should be soldered.
 ILI9341  
 32Pin
 320x240
+RGB565, 16 bit interface
