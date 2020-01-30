@@ -89,28 +89,21 @@ void MX_FSMC_Init(void)
   hsram2.Init.WaitSignalActive = FSMC_WAIT_TIMING_BEFORE_WS;
   hsram2.Init.WriteOperation = FSMC_WRITE_OPERATION_ENABLE;
   hsram2.Init.WaitSignal = FSMC_WAIT_SIGNAL_DISABLE;
-  hsram2.Init.ExtendedMode = FSMC_EXTENDED_MODE_ENABLE;
+  hsram2.Init.ExtendedMode = FSMC_EXTENDED_MODE_DISABLE;
   hsram2.Init.AsynchronousWait = FSMC_ASYNCHRONOUS_WAIT_DISABLE;
   hsram2.Init.WriteBurst = FSMC_WRITE_BURST_DISABLE;
   hsram2.Init.PageSize = FSMC_PAGE_SIZE_NONE;
   /* Timing */
-  Timing.AddressSetupTime = 0;
+  Timing.AddressSetupTime = 1;
   Timing.AddressHoldTime = 15;
-  Timing.DataSetupTime = 60;
+  Timing.DataSetupTime = 2;
   Timing.BusTurnAroundDuration = 0;
   Timing.CLKDivision = 16;
   Timing.DataLatency = 17;
   Timing.AccessMode = FSMC_ACCESS_MODE_A;
   /* ExtTiming */
-  ExtTiming.AddressSetupTime = 0;
-  ExtTiming.AddressHoldTime = 15;
-  ExtTiming.DataSetupTime = 255;
-  ExtTiming.BusTurnAroundDuration = 15;
-  ExtTiming.CLKDivision = 16;
-  ExtTiming.DataLatency = 17;
-  ExtTiming.AccessMode = FSMC_ACCESS_MODE_A;
 
-  if (HAL_SRAM_Init(&hsram2, &Timing, &ExtTiming) != HAL_OK)
+  if (HAL_SRAM_Init(&hsram2, &Timing, NULL) != HAL_OK)
   {
     Error_Handler( );
   }

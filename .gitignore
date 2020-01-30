@@ -6,4 +6,6 @@
 *.map
 *.d
 *.o
+*.swp
 build/
+temp/

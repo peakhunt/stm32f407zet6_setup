@@ -1,18 +1,17 @@
 #MicroXplorer Configuration settings - do not modify
 FSMC.AccessMode1=FSMC_ACCESS_MODE_A
 FSMC.AddressSetupTime1=5
-FSMC.AddressSetupTime2=0
+FSMC.AddressSetupTime2=1
 FSMC.BusTurnAroundDuration1=4
 FSMC.BusTurnAroundDuration2=0
 FSMC.DataSetupTime1=1
-FSMC.DataSetupTime2=60
+FSMC.DataSetupTime2=2
 FSMC.ExtendedAddressSetupTime1=4
-FSMC.ExtendedAddressSetupTime2=0
 FSMC.ExtendedBusTurnAroundDuration1=4
 FSMC.ExtendedDataSetupTime1=5
 FSMC.ExtendedMode1=FSMC_EXTENDED_MODE_ENABLE
-FSMC.ExtendedMode2=FSMC_EXTENDED_MODE_ENABLE
-FSMC.IPParameters=WriteOperation1,ExtendedMode1,AddressSetupTime1,DataSetupTime1,BusTurnAroundDuration1,AccessMode1,ExtendedDataSetupTime1,ExtendedAddressSetupTime1,ExtendedBusTurnAroundDuration1,AddressSetupTime2,ExtendedMode2,DataSetupTime2,ExtendedAddressSetupTime2,BusTurnAroundDuration2
+FSMC.ExtendedMode2=FSMC_EXTENDED_MODE_DISABLE
+FSMC.IPParameters=WriteOperation1,ExtendedMode1,AddressSetupTime1,DataSetupTime1,BusTurnAroundDuration1,AccessMode1,ExtendedDataSetupTime1,ExtendedAddressSetupTime1,ExtendedBusTurnAroundDuration1,AddressSetupTime2,ExtendedMode2,DataSetupTime2,BusTurnAroundDuration2
 FSMC.WriteOperation1=FSMC_WRITE_OPERATION_ENABLE
 File.Version=6
 GPIO.groupedBy=Group By Peripherals
