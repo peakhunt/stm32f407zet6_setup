@@ -164,9 +164,15 @@ lcd_write_cmd8(uint8_t cmd)
 }
 
 static void
-lcd_write_data8(uint8_t cmd)
+lcd_write_data8(uint8_t data)
 {
-  *LCD_DAT = cmd;
+  *LCD_DAT = data;
+}
+
+static void
+lcd_write_data16(uint16_t data)
+{
+  *LCD_DAT = data;
 }
 
 static void
@@ -180,13 +186,55 @@ lcd_write_cmd_multiple(uint8_t cmd, uint8_t* data, uint32_t size)
   }
 }
 
-static uint8_t _lcd_on = 1;
+#define LCD_IO_WriteData16_to_2x8(dt)    {lcd_write_data8((dt) >> 8); lcd_write_data8(dt); }
+
+static void
+lcd_write_pixel(uint16_t x, uint16_t y, uint16_t rgb)
+{
+  // set cursor
+  lcd_write_cmd8(ILI9341_CASET);
+  LCD_IO_WriteData16_to_2x8(x);
+  LCD_IO_WriteData16_to_2x8(x);
+
+  lcd_write_cmd8(ILI9341_PASET);
+  LCD_IO_WriteData16_to_2x8(y);
+  LCD_IO_WriteData16_to_2x8(y);
+
+  // set pixel
+  lcd_write_cmd8(ILI9341_RAMWR);
+  lcd_write_data16(rgb);
+}
+
+static void
+fill_lcd(void)
+{
+  uint16_t col, row;
+  uint16_t colors[] = 
+  {
+    ((0x1f << 11) | (0x00 << 5) | 0x0),
+    ((0x00 << 11) | (0x3f << 5) | 0x0),
+    ((0x00 << 11) | (0x00 << 5) | 0x1f),
+  };
+  static uint8_t i;
+
+  for(row = 0; row < 320; row++)
+  {
+    for(col = 0; col < 240; col++)
+    {
+      //
+      // 5-6-5 format
+      // 5 : 0x1F
+      // 6 : 0x3F
+      //
+      lcd_write_pixel(col, row, colors[i % 3]);
+    }
+  }
+  i++;
+}
 
 void
-test_lcd(void)
+init_lcd(void)
 {
-  uint8_t i = 0;
-
   lcd_write_cmd8(ILI9341_SWRESET);
   HAL_Delay(10);
 
@@ -234,16 +282,6 @@ test_lcd(void)
   HAL_Delay(10);
   lcd_write_cmd8(ILI9341_DISPON);    // Display on
   HAL_Delay(10);
-
-  for(i = 0; i < 10; i++)
-  {
-#if 1
-    lcd_write_cmd8(0x28);  // off
-    HAL_Delay(500);
-    lcd_write_cmd8(0x29);  // on
-    HAL_Delay(500);
-#endif
-  }
 }
 
 void
@@ -263,16 +301,6 @@ test_sram(void)
   {
     if ((current - base) >= (1024 * 1024))
     {
-      if (_lcd_on)
-      {
-        _lcd_on = 0;
-        lcd_write_cmd8(0x28);  // off
-      }
-      else
-      {
-        _lcd_on = 1;
-        lcd_write_cmd8(0x29);  // off
-      }
       current = base;
     }
 
@@ -376,7 +404,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  test_lcd();
+  init_lcd();
 
   while (1)
   {
@@ -391,6 +419,7 @@ int main(void)
 #else
     test_sram();
     test_sram_16();
+    fill_lcd();
 #endif
   }
   /* USER CODE END 3 */
