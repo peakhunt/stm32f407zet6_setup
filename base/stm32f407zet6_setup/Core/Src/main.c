@@ -209,13 +209,12 @@ static void
 fill_lcd(void)
 {
   uint16_t col, row;
-  uint16_t colors[] = 
-  {
-    ((0x1f << 11) | (0x00 << 5) | 0x0),
-    ((0x00 << 11) | (0x3f << 5) | 0x0),
-    ((0x00 << 11) | (0x00 << 5) | 0x1f),
-  };
-  static uint8_t i;
+  static uint16_t r = 0,
+                  g = 0,
+                  b = 0;
+  uint16_t color = 0x0;
+
+  color = (r << 11) | (g << 5) | b;
 
   for(row = 0; row < 320; row++)
   {
@@ -226,10 +225,29 @@ fill_lcd(void)
       // 5 : 0x1F
       // 6 : 0x3F
       //
-      lcd_write_pixel(col, row, colors[i % 3]);
+      lcd_write_pixel(col, row, color);
     }
   }
-  i++;
+
+  if(r < 0x1f)
+  {
+    r++;
+    return;
+  }
+
+  if(g < 0x3f)
+  {
+    g++;
+    return;
+  }
+
+  if(b < 0x1f)
+  {
+    b++;
+    return;
+  }
+
+  r = g = b = 0;
 }
 
 void
@@ -418,7 +436,7 @@ int main(void)
     HAL_Delay(50);
 #else
     test_sram();
-    test_sram_16();
+    //test_sram_16();
     fill_lcd();
 #endif
   }
