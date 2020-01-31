@@ -17,4 +17,5 @@ ILI9341
 32Pin  
 320x240  
 RGB565, 16 bit interface  
-XPT2046 for touch  
+XPT2046 for resistive touch  
+
