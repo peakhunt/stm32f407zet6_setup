@@ -34,6 +34,10 @@ BUILD_DIR = build
 ######################################
 # source
 ######################################
+# APP sources
+APP_SOURCES = \
+App/ili9341.c
+
 # C sources
 C_SOURCES =  \
 Core/Src/main.c \
@@ -58,7 +62,8 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
 Core/Src/system_stm32f4xx.c \
 Core/Src/fsmc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fsmc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c \
+$(APP_SOURCES)
 
 # ASM sources
 ASM_SOURCES =  \
@@ -113,13 +118,18 @@ C_DEFS =  \
 # AS includes
 AS_INCLUDES = 
 
+# APP includes
+APP_INCLUDES = \
+-IApp
+
 # C includes
 C_INCLUDES =  \
 -ICore/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc \
 -IDrivers/STM32F4xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
+$(APP_INCLUDES)
 
 
 # compile gcc flags

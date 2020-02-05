@@ -1,0 +1,63 @@
+ -------------- width -----------------
+ ======================================
+| (x0, y0)                    (x1, y0)
+h (ax0, ay0)                (ax1, ay0)
+e
+i
+g
+h
+t (ax0, ay1)                (ax1, ay1)
+| (x0, y1)                    (x1, y1)
+ ======================================
+
+Point Calculation from ADC values. Basically
+a) px = ADCx * (width / ADC_MAX)
+b) py = ADCy * (height / ADC_MAX)
+
+With 4 points shown above,
+a) px = ADCx * ((x1 - x0) / (ax1 - ax0))
+b) py = ADCy * ((y1 - y0) / (ay1 - ay0))
+
+Calibration Strategy
+Basically, we need two ADC values on (x0, y0) and (x1, y1)
+
+
+a) Take 4 points at (x0,y0) (x0,y1) (x1,y0) (x1,y1) on the screean.
+   ADCx0 = (ax0U + ax0B) / 2;
+   ADCy0 = (ay0L + ay0R) / 2;
+   ADCx1 = (ax1U + ax1B) / 2;
+   ADCy1 = (ay1L + ay1R) / 2;
+
+b) calculate linear equation
+
+  px 
+  |
+  |                   (ADCx1, x1)
+  |
+  |
+  |
+  |
+  | (ADCx0, x0)
+  -------------------------- ADCx
+
+  px = xa * x + xb
+
+  xa  = (x1 - x0) / (ADCx1 - ADCx0)
+  xb  = x0 - ADCx0 * xa
+
+----------------------------
+  py = ya * y + yb
+
+  ya = (y1 - y0) / (ADCy1 - ADCy0)
+  yb = y0 + ADCy0 + ya
+
+
+
+==========================================
+  initial setup with no calibration.
+  We need two ADC values for two known points: (x0, y0) and (x1, y1)
+
+  ADCx0 => x0 * ADC_MAX / width
+  ADCx1 => x1 * ADC_MAX / width
+  ADCy0 => y0 * ADC_MAX / height
+  ADCy1 => y1 * ADC_MAX / height
