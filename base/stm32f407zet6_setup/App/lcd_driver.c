@@ -17,7 +17,7 @@ lcd_test_by_fill(SoftTimerElem* te)
                   b = 0;
   uint16_t color = 0x0;
 
-  mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
+  // mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
 
   color = (r << 11) | (g << 5) | b;
 
@@ -62,5 +62,6 @@ lcd_driver_init(void)
 
   soft_timer_init_elem(&_fps_timer);
   _fps_timer.cb    = lcd_test_by_fill;
-  mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
+  // mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
+  lcd_test_by_fill(NULL);
 }
