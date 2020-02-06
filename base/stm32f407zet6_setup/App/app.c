@@ -6,6 +6,7 @@
 #include "mainloop_timer.h"
 
 #include "lcd_driver.h"
+#include "touch_screen.h"
 #include "blinky.h"
 
 void
@@ -19,6 +20,7 @@ void
 app_init_r(void)
 {
   lcd_driver_init();
+  touch_screen_init();
   blinky_init();
 }
 

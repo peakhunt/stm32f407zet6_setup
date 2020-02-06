@@ -3,4 +3,6 @@
 
 #define DISPATCH_EVENT_TIMER_TICK           0
 
+#define DISPATCH_EVENT_TOUCH_SCREEN         4
+
 #endif //!__EVENT_LIST_DEF_H__

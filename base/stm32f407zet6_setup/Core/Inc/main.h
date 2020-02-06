@@ -69,6 +69,7 @@ void Error_Handler(void);
 #define T_SCK_GPIO_Port GPIOB
 #define T_PEN_Pin GPIO_PIN_1
 #define T_PEN_GPIO_Port GPIOB
+#define T_PEN_EXTI_IRQn EXTI1_IRQn
 #define T_MISO_Pin GPIO_PIN_2
 #define T_MISO_GPIO_Port GPIOB
 #define T_MOSI_Pin GPIO_PIN_11

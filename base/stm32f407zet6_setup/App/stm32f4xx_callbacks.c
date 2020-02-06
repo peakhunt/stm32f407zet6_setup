@@ -20,3 +20,8 @@ void HAL_SYSTICK_Callback(void)
 
   event_set(1 << DISPATCH_EVENT_TIMER_TICK);
 }
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  event_set(1 << DISPATCH_EVENT_TOUCH_SCREEN);
+}
