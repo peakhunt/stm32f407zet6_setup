@@ -34,9 +34,6 @@ BUILD_DIR = build
 ######################################
 # source
 ######################################
-# APP sources
-APP_SOURCES = \
-App/ili9341.c
 
 # C sources
 C_SOURCES =  \
@@ -62,8 +59,21 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_exti.c \
 Core/Src/system_stm32f4xx.c \
 Core/Src/fsmc.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_fsmc.c \
-Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c \
-$(APP_SOURCES)
+Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c
+
+# APP sources
+APP_SOURCES = \
+App/event_dispatcher.c \
+App/soft_timer.c \
+App/mainloop_timer.c \
+App/stm32f4xx_callbacks.c \
+App/app.c \
+App/blinky.c \
+App/ili9341.c \
+App/lcd_driver.c \
+App/xpt2046.c
+
+C_SOURCES += $(APP_SOURCES)
 
 # ASM sources
 ASM_SOURCES =  \

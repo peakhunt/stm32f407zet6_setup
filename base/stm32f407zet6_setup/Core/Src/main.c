@@ -22,7 +22,8 @@
 #include "main.h"
 #include "gpio.h"
 #include "fsmc.h"
-#include "ili9341.h"
+
+#include "app.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -57,51 +58,6 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-static void
-fill_lcd(void)
-{
-  uint16_t col, row;
-  static uint16_t r = 0,
-                  g = 0,
-                  b = 0;
-  uint16_t color = 0x0;
-
-  color = (r << 11) | (g << 5) | b;
-
-  for(row = 0; row < 320; row++)
-  {
-    for(col = 0; col < 240; col++)
-    {
-      //
-      // 5-6-5 format
-      // 5 : 0x1F
-      // 6 : 0x3F
-      //
-      ili9341_write_pixel(col, row, color);
-    }
-  }
-
-  if(r < 0x1f)
-  {
-    r++;
-    return;
-  }
-
-  if(g < 0x3f)
-  {
-    g++;
-    return;
-  }
-
-  if(b < 0x1f)
-  {
-    b++;
-    return;
-  }
-
-  r = g = b = 0;
-}
-
 void
 test_sram(void)
 {
@@ -201,45 +157,26 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  app_init_f();
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_FSMC_Init();
-  /* USER CODE BEGIN 2 */
 
+  /* USER CODE BEGIN 2 */
+  app_init_r();
   /* USER CODE END 2 */
- 
- 
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  ili9341_init_lcd();
-
-  while (1)
-  {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-#if 0
-    HAL_GPIO_TogglePin(LED0_GPIO_Port, LED0_Pin);
-    HAL_Delay(100);
-    HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-    HAL_Delay(50);
-#else
-    test_sram();
-    //test_sram_16();
-    fill_lcd();
-#endif
-  }
+  app_mainloop();
   /* USER CODE END 3 */
 }
 
