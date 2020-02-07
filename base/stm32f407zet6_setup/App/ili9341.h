@@ -3,8 +3,8 @@
 
 #include <stdint.h>
 
-#define ILI9341_LCD_PIXEL_WIDTH     320
-#define ILI9341_LCD_PIXEL_HEIGHT    240
+#define ILI9341_LCD_PIXEL_WIDTH     240
+#define ILI9341_LCD_PIXEL_HEIGHT    320
 
 #define ILI9341_NOP            0x00
 #define ILI9341_SWRESET        0x01

@@ -56,33 +56,24 @@ ili9341_init_lcd(void)
   lcd_write_cmd_multiple(0xF7, (uint8_t *)"\x20", 1);
   lcd_write_cmd_multiple(0xEA, (uint8_t *)"\x00\x00", 2);
 
-  // Power Control 1 (Vreg1out, Verg2out)
   lcd_write_cmd_multiple(ILI9341_PWCTR1, (uint8_t *)"\x23", 1);
-
-  // Power Control 2 (VGH,VGL)
   lcd_write_cmd_multiple(ILI9341_PWCTR2, (uint8_t *)"\x10", 1);
-
-  // Power Control 3 (Vcom)
   lcd_write_cmd_multiple(ILI9341_VMCTR1, (uint8_t *)"\x3E\x28", 2);
-
-  // Power Control 3 (Vcom)
   lcd_write_cmd_multiple(ILI9341_VMCTR2, (uint8_t *)"\x86", 1);
 
   // Vertical scroll zero
+  // XXX ILI9341_MADCTL
   lcd_write_cmd_multiple(ILI9341_VSCRSADD, (uint8_t *)"\x00", 1);
   lcd_write_cmd_multiple(ILI9341_PIXFMT, (uint8_t *)"\x55", 1);
 
   // lcd_write_cmd_multiple(0xF6, (uint8_t *)"\x01\x00\x06", 3);
 
   lcd_write_cmd_multiple(ILI9341_FRMCTR1, (uint8_t *)"\x00\x18", 2);
-  lcd_write_cmd_multiple(ILI9341_DFUNCTR, (uint8_t *)"\x08\x82\x27", 3);  // Display Function Control
-  lcd_write_cmd_multiple(0xF2, (uint8_t *)"\x00", 1);            // 3Gamma Function Disable
-  lcd_write_cmd_multiple(ILI9341_GAMMASET, (uint8_t *)"\x01", 1);// Gamma curve selected
+  lcd_write_cmd_multiple(ILI9341_DFUNCTR, (uint8_t *)"\x08\x82\x27", 3); 
+  lcd_write_cmd_multiple(0xF2, (uint8_t *)"\x00", 1);                     // 3Gamma Function Disable
+  lcd_write_cmd_multiple(ILI9341_GAMMASET, (uint8_t *)"\x01", 1);
 
-  // positive gamma control
   lcd_write_cmd_multiple(ILI9341_GMCTRP1, (uint8_t *)"\x0F\x31\x2B\x0C\x0E\x08\x4E\xF1\x37\x07\x10\x03\x0E\x09\x00", 15);
-
-  // negative gamma control
   lcd_write_cmd_multiple(ILI9341_GMCTRN1, (uint8_t *)"\x00\x0E\x14\x03\x11\x07\x31\xC1\x48\x08\x0F\x0C\x31\x36\x0F", 15);
 
   lcd_write_cmd8(ILI9341_MADCTL);

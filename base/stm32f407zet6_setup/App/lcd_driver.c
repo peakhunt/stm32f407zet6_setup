@@ -58,10 +58,24 @@ lcd_test_by_fill(SoftTimerElem* te)
 void
 lcd_driver_init(void)
 {
+  uint16_t color = 0x3f << 5;
+  uint16_t i;
+
   ili9341_init_lcd();
 
   soft_timer_init_elem(&_fps_timer);
   _fps_timer.cb    = lcd_test_by_fill;
   // mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
   lcd_test_by_fill(NULL);
+  for(i = 10; i < (240 -10); i++)
+  {
+    ili9341_write_pixel(i, 10, color);
+    ili9341_write_pixel(i, 320 - 10, color);
+  }
+
+  for(i = 10; i < (320 - 10); i++)
+  {
+    ili9341_write_pixel(240 - 10, i, color);
+    ili9341_write_pixel(10, i, color);
+  }
 }

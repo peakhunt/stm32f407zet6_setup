@@ -17,17 +17,16 @@ touch_screen_irq_handler(uint32_t event)
 
   HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 
-  xpt2046_read(XPT2046_DFR_CMD(XPT2046_DF_CH_X), &adc_x);
-  xpt2046_read(XPT2046_DFR_CMD(XPT2046_DF_CH_Y), &adc_y);
+  xpt2046_read(&adc_x, &adc_y);
 
   xpt2046_calc_point(adc_x, adc_y, &px, &py);
 
-  ili9341_write_pixel(py, px, color);
+  ili9341_write_pixel(px, py, color);
 }
 
 void
 touch_screen_init(void)
 {
   event_register_handler(touch_screen_irq_handler, DISPATCH_EVENT_TOUCH_SCREEN);
-  xpt2046_init(320, 240);
+  xpt2046_init(240, 320);
 }
