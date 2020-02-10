@@ -42,4 +42,12 @@ touch_screen_init(void)
 {
   event_register_handler(touch_screen_irq_handler, DISPATCH_EVENT_TOUCH_SCREEN);
   xpt2046_init(240, 320);
+
+  NVIC_DisableIRQ(EXTI1_IRQn);
+  __DSB();
+  __ISB();
+
+  xpt2046_power_down();
+
+  NVIC_EnableIRQ(EXTI1_IRQn);
 }

@@ -15,6 +15,7 @@
 extern void xpt2046_calc_point(uint16_t adc_x, uint16_t adc_y, uint16_t* px, uint16_t* py);
 extern void xpt2046_set_calibration(uint16_t adc_x0,uint16_t adc_y0, uint16_t adc_x1, uint16_t adc_y1);
 extern void xpt2046_read(uint16_t* x, uint16_t* y);
+extern void xpt2046_power_down();
 extern void xpt2046_init(uint16_t width, uint16_t height);
 
 #endif /* !__XPT2046_DEF_H__ */

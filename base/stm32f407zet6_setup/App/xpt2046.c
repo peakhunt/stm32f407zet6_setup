@@ -200,6 +200,4 @@ xpt2046_init(uint16_t width, uint16_t height)
       xpt2046_pt_to_adc(width, width - XPT2046_CAL_OFFSET),   // adc x1
       xpt2046_pt_to_adc(height, height - XPT2046_CAL_OFFSET)  // adc y1
   );
-
-  xpt2046_power_down();
 }
