@@ -164,7 +164,6 @@ void
 xpt2046_read(uint16_t* x, uint16_t* y)
 {
   // CS LOW
-
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
 
   HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
@@ -183,7 +182,6 @@ xpt2046_read(uint16_t* x, uint16_t* y)
   (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
   (void)xpt2046_read_write(0);
   (void)xpt2046_read_write(0);
-
 
   // CS HIGH
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);

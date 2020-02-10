@@ -18,7 +18,13 @@ touch_screen_irq_handler(uint32_t event)
 
   HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 
+  NVIC_DisableIRQ(EXTI1_IRQn);
+  __DSB();
+  __ISB();
+
   xpt2046_read(&adc_r_x, &adc_r_y);
+
+  NVIC_EnableIRQ(EXTI1_IRQn);
 
   //
   // touch screen rotation handling
