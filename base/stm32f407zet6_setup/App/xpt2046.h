@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+#define XPT2046_ADC_MAX       0xfffU
 #define XPT2046_CAL_OFFSET    20
 
 #define XPT2046_DF_CH_Y       0x10

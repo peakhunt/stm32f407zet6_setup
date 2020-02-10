@@ -1,11 +1,14 @@
 #include "xpt2046.h"
 #include "gpio.h"
 
-#define XPT2046_ADC_MAX       0xfffU
-
 //#define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
-#define XPT2046_MAX_SAMPLES           128
+#define XPT2046_MAX_SAMPLES           256
 #define XPT2046_SPI_DELAY(x)
+
+#define CTRL_LO_DFR     (0b0011)
+#define CTRL_LO_SER     (0b0100)
+#define CTRL_HI_X       (0b1001  << 4)
+#define CTRL_HI_Y       (0b1101  << 4)
 
 typedef struct
 {
@@ -76,18 +79,19 @@ xpt2046_read_write(uint8_t data)
   // first 8 command bits
   for(uint8_t bit = 0x80; bit > 0; bit >>= 1)
   {
-    // latch data
+    // latch output
     HAL_GPIO_WritePin(T_MOSI_GPIO_Port, T_MOSI_Pin, (data & bit) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 
     // toggle clock
     HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_SET);
 
+    HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
+
+    // read input
     if(HAL_GPIO_ReadPin(T_MISO_GPIO_Port, T_MISO_Pin) == GPIO_PIN_SET)
     {
       ret |= bit;
     }
-
-    HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
   }
 
   return ret;
@@ -110,6 +114,21 @@ xpt2046_read_data_loop(uint8_t ctrl)
 }
 
 void
+xpt2046_power_down()
+{
+  HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
+
+  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
+  (void)xpt2046_read_write(0);
+  (void)xpt2046_read_write(0);
+
+  // CS HIGH
+  HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
+}
+
+#if 0
+void
 xpt2046_read(uint16_t* x, uint16_t* y)
 {
   static const uint8_t CTRL_LO_DFR = 0b0011;
@@ -126,6 +145,7 @@ xpt2046_read(uint16_t* x, uint16_t* y)
   HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
   (void)xpt2046_read_write(CTRL_HI_X | ctrl_lo);
+
   *x = xpt2046_read_data_loop(CTRL_HI_X | ctrl_lo);
   *y = xpt2046_read_data_loop(CTRL_HI_Y | ctrl_lo);
 
@@ -139,23 +159,36 @@ xpt2046_read(uint16_t* x, uint16_t* y)
   // CS HIGH
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
 }
-
+#else
 void
-xpt2046_power_down()
+xpt2046_read(uint16_t* x, uint16_t* y)
 {
-  static const uint8_t CTRL_LO_SER = 0b0100;
-  static const uint8_t CTRL_HI_X = 0b1001  << 4;
+  // CS LOW
 
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
+
   HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
+  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_DFR);    // send read X command
+  *x = xpt2046_read_data_loop(CTRL_HI_X | CTRL_LO_DFR); // read X
+  (void)xpt2046_read_write(0);                          // read dummy 8
+  (void)xpt2046_read_write(0);                          // read dummy 8
+
+  (void)xpt2046_read_write(CTRL_HI_Y | CTRL_LO_DFR);    // send read X command
+  *y = xpt2046_read_data_loop(CTRL_HI_Y | CTRL_LO_DFR); // read Y
+  (void)xpt2046_read_write(0);                          // read dummy 8
+  (void)xpt2046_read_write(0);                          // read dummy 8
+
+  // power down
   (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
   (void)xpt2046_read_write(0);
   (void)xpt2046_read_write(0);
 
+
   // CS HIGH
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
 }
+#endif
 
 void
 xpt2046_init(uint16_t width, uint16_t height)

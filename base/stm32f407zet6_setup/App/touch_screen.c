@@ -11,13 +11,20 @@
 static void
 touch_screen_irq_handler(uint32_t event)
 {
-  uint16_t      adc_x, adc_y,
+  uint16_t      adc_r_x, adc_r_y,
+                adc_x, adc_y,
                 px, py;
   uint16_t      color = (0x1f << 11);
 
   HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
 
-  xpt2046_read(&adc_x, &adc_y);
+  xpt2046_read(&adc_r_x, &adc_r_y);
+
+  //
+  // touch screen rotation handling
+  //
+  adc_x = XPT2046_ADC_MAX - adc_r_y;
+  adc_y = adc_r_x;
 
   xpt2046_calc_point(adc_x, adc_y, &px, &py);
 

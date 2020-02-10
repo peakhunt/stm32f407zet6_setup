@@ -22,7 +22,8 @@ TARGET = stm32f407zet6_setup
 # debug build?
 DEBUG = 1
 # optimization
-OPT = -Og
+#OPT = -Og
+OPT = -O0
 
 
 #######################################
