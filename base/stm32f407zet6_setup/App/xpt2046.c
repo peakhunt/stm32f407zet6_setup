@@ -120,8 +120,8 @@ xpt2046_power_down()
 void
 xpt2046_read(uint16_t* x, uint16_t* y)
 {
-  uint16_t    prev_x = 0xffff, cur_x = 0xffff,
-              prev_y = 0xffff, cur_y = 0xffff;
+  uint16_t    cur_x = 0xffff,
+              cur_y = 0xffff;
   uint8_t i = 0;
 
   // CS LOW
@@ -132,9 +132,6 @@ xpt2046_read(uint16_t* x, uint16_t* y)
 
   do
   {
-    prev_x = cur_x;
-    prev_y = cur_y;
-
     // read X, initiate Y read
     cur_x = xpt2046_read_write(0);
     cur_x = (cur_x << 4) | (xpt2046_read_write(CTRL_HI_Y | CTRL_LO_READ) >> 4);
@@ -142,7 +139,6 @@ xpt2046_read(uint16_t* x, uint16_t* y)
     // read Y, initiate X read
     cur_y = xpt2046_read_write(0);
     cur_y = (cur_y << 4) | (xpt2046_read_write(CTRL_HI_X | CTRL_LO_READ) >> 4);
-  //} while(((prev_x != cur_x) || (prev_y != cur_y)) && (++i < XPT2046_MAX_SAMPLES));
   } while((++i < XPT2046_MAX_SAMPLES));
 
   // read first dummy
