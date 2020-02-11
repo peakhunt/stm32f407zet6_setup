@@ -93,7 +93,7 @@ touch_screen_irq_handler(uint32_t event)
 
   if(!is_soft_timer_running(&_touch_timer))
   {
-    mainloop_timer_schedule(&_touch_timer, 2);
+    mainloop_timer_schedule(&_touch_timer, 1);
     return;
   }
 }
