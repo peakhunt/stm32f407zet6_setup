@@ -177,5 +177,5 @@ xpt2046_init(uint16_t width, uint16_t height)
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
 
   // power down for IRQ
-  xpt2046_power_down();
+  // xpt2046_power_down();
 }

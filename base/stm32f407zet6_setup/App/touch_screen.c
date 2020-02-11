@@ -10,7 +10,6 @@
 #include "ili9341.h"
 
 static uint32_t _irq_count = 0;
-static uint8_t _initialized = false;
 
 static void
 touch_screen_irq_handler(uint32_t event)
@@ -20,8 +19,6 @@ touch_screen_irq_handler(uint32_t event)
                 px, py;
   uint16_t      color = (0x1f << 11);
 
-  if(!_initialized) return;
-
   _irq_count++;
 
   if(_irq_count > 128)
@@ -30,13 +27,18 @@ touch_screen_irq_handler(uint32_t event)
     _irq_count = 0;
   }
 
-  NVIC_DisableIRQ(EXTI1_IRQn);
+  if(HAL_GPIO_ReadPin(T_PEN_GPIO_Port, T_PEN_Pin) == GPIO_PIN_SET)
+  {
+    return;
+  }
+
+  NVIC_DisableIRQ(T_PEN_EXTI_IRQn);
   __DSB();
   __ISB();
 
   xpt2046_read(&adc_r_x, &adc_r_y);
 
-  NVIC_EnableIRQ(EXTI1_IRQn);
+  NVIC_EnableIRQ(T_PEN_EXTI_IRQn);
 
   if (adc_r_x == 0xffff || adc_r_y == 0xffff ||
       adc_r_x == 0 || adc_r_y == 0)
@@ -60,13 +62,11 @@ touch_screen_init(void)
 {
   event_register_handler(touch_screen_irq_handler, DISPATCH_EVENT_TOUCH_SCREEN);
 
-  NVIC_DisableIRQ(EXTI1_IRQn);
+  NVIC_DisableIRQ(T_PEN_EXTI_IRQn);
   __DSB();
   __ISB();
 
   xpt2046_init(240, 320);
 
-  NVIC_EnableIRQ(EXTI1_IRQn);
-
-  _initialized = true;
+  NVIC_EnableIRQ(T_PEN_EXTI_IRQn);
 }
