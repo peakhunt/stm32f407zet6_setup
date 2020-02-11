@@ -65,6 +65,7 @@ Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_sram.c
 # APP sources
 APP_SOURCES = \
 App/event_dispatcher.c \
+App/dwt_stm32_delay.c \
 App/soft_timer.c \
 App/mainloop_timer.c \
 App/stm32f4xx_callbacks.c \

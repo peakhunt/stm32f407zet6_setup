@@ -1,6 +1,8 @@
 #include "xpt2046.h"
 #include "gpio.h"
 
+#include "dwt_stm32_delay.h"
+
 #define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
 #define XPT2046_MAX_SAMPLES           64
 
@@ -86,6 +88,7 @@ xpt2046_read_write(uint8_t data)
 
     // toggle clock
     HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_SET);
+
     HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
     // read input
@@ -102,7 +105,6 @@ void
 xpt2046_power_down()
 {
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
   (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
   (void)xpt2046_read_write(0);
@@ -121,7 +123,6 @@ xpt2046_read(uint16_t* x, uint16_t* y)
 
   // CS LOW
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
-  HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
   // initiate read X
   (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_READ);
@@ -168,5 +169,12 @@ xpt2046_init(uint16_t width, uint16_t height)
       xpt2046_pt_to_adc(height, height - XPT2046_CAL_OFFSET)  // adc y1
   );
 
+  // just to be sure
+  HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
+  HAL_Delay(1);
+  HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
+
+  // power down for IRQ
   xpt2046_power_down();
 }

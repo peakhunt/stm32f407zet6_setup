@@ -9,9 +9,12 @@
 #include "touch_screen.h"
 #include "blinky.h"
 
+#include "dwt_stm32_delay.h"
+
 void
 app_init_f(void)
 {
+  DWT_Delay_Init();
   event_dispatcher_init();
   mainloop_timer_init();
 }
