@@ -1,14 +1,16 @@
 #include "xpt2046.h"
 #include "gpio.h"
 
-//#define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
-#define XPT2046_MAX_SAMPLES           256
-#define XPT2046_SPI_DELAY(x)
+#define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
+#define XPT2046_MAX_SAMPLES           64
 
-#define CTRL_LO_DFR     (0b0011)
+#define CTRL_LO_DFR     (0b0000)
+#define CTRL_LO_DFR_ID  (0b0011)
 #define CTRL_LO_SER     (0b0100)
 #define CTRL_HI_X       (0b1001  << 4)
 #define CTRL_HI_Y       (0b1101  << 4)
+
+#define CTRL_LO_READ    CTRL_LO_DFR_ID
 
 typedef struct
 {
@@ -84,7 +86,6 @@ xpt2046_read_write(uint8_t data)
 
     // toggle clock
     HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_SET);
-
     HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
     // read input
@@ -95,22 +96,6 @@ xpt2046_read_write(uint8_t data)
   }
 
   return ret;
-}
-
-static inline uint16_t
-xpt2046_read_data_loop(uint8_t ctrl)
-{
-  uint16_t prev = 0xffff,
-           cur = 0xffff;
-  uint8_t i = 0;
-
-  do
-  {
-    prev = cur;
-    cur = xpt2046_read_write(0);
-    cur = (cur << 4) | (xpt2046_read_write(ctrl) >> 4);  // 16 clocks -> 12-bits (zero-padded at end)
-  } while ((prev != cur) && (++i < XPT2046_MAX_SAMPLES));
-  return cur;
 }
 
 void
@@ -127,66 +112,48 @@ xpt2046_power_down()
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
 }
 
-#if 0
 void
 xpt2046_read(uint16_t* x, uint16_t* y)
 {
-  static const uint8_t CTRL_LO_DFR = 0b0011;
-  static const uint8_t CTRL_LO_SER = 0b0100;
-  static const uint8_t CTRL_HI_X = 0b1001  << 4;
-  static const uint8_t CTRL_HI_Y = 0b1101  << 4;
-
-  //uint8_t ctrl_lo = ((mode == MODE_DFR) ? CTRL_LO_DFR : CTRL_LO_SER);
-  uint8_t ctrl_lo = CTRL_LO_DFR;
+  uint16_t    prev_x = 0xffff, cur_x = 0xffff,
+              prev_y = 0xffff, cur_y = 0xffff;
+  uint8_t i = 0;
 
   // CS LOW
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
-
   HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
 
-  (void)xpt2046_read_write(CTRL_HI_X | ctrl_lo);
+  // initiate read X
+  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_READ);
 
-  *x = xpt2046_read_data_loop(CTRL_HI_X | ctrl_lo);
-  *y = xpt2046_read_data_loop(CTRL_HI_Y | ctrl_lo);
+  do
+  {
+    prev_x = cur_x;
+    prev_y = cur_y;
 
-  // for DFR mode only
-  xpt2046_read_write(0);
-  xpt2046_read_write(CTRL_HI_Y | CTRL_LO_SER);
+    // read X, initiate Y read
+    cur_x = xpt2046_read_write(0);
+    cur_x = (cur_x << 4) | (xpt2046_read_write(CTRL_HI_Y | CTRL_LO_READ) >> 4);
 
-  // finally
-  xpt2046_read_write(0);
+    // read Y, initiate X read
+    cur_y = xpt2046_read_write(0);
+    cur_y = (cur_y << 4) | (xpt2046_read_write(CTRL_HI_X | CTRL_LO_READ) >> 4);
+  } while(((prev_x != cur_x) || (prev_y != cur_y)) && (++i < XPT2046_MAX_SAMPLES));
 
-  // CS HIGH
-  HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
-}
-#else
-void
-xpt2046_read(uint16_t* x, uint16_t* y)
-{
-  // CS LOW
-  HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
+  // read first dummy
+  (void)xpt2046_read_write(0);
 
-  HAL_GPIO_WritePin(T_SCK_GPIO_Port, T_SCK_Pin, GPIO_PIN_RESET);
-
-  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_DFR);    // send read X command
-  *x = xpt2046_read_data_loop(CTRL_HI_X | CTRL_LO_DFR); // read X
-  (void)xpt2046_read_write(0);                          // read dummy 8
-  (void)xpt2046_read_write(0);                          // read dummy 8
-
-  (void)xpt2046_read_write(CTRL_HI_Y | CTRL_LO_DFR);    // send read X command
-  *y = xpt2046_read_data_loop(CTRL_HI_Y | CTRL_LO_DFR); // read Y
-  (void)xpt2046_read_write(0);                          // read dummy 8
-  (void)xpt2046_read_write(0);                          // read dummy 8
-
-  // power down
+  // read second dummy, initiate power down
   (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
   (void)xpt2046_read_write(0);
   (void)xpt2046_read_write(0);
 
   // CS HIGH
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
+
+  *x = cur_x;
+  *y = cur_y;
 }
-#endif
 
 void
 xpt2046_init(uint16_t width, uint16_t height)
@@ -200,4 +167,6 @@ xpt2046_init(uint16_t width, uint16_t height)
       xpt2046_pt_to_adc(width, width - XPT2046_CAL_OFFSET),   // adc x1
       xpt2046_pt_to_adc(height, height - XPT2046_CAL_OFFSET)  // adc y1
   );
+
+  xpt2046_power_down();
 }
