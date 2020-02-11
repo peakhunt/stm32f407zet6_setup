@@ -4,7 +4,7 @@
 #include "dwt_stm32_delay.h"
 
 #define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
-#define XPT2046_MAX_SAMPLES           32
+#define XPT2046_MAX_SAMPLES         2
 
 #define CTRL_LO_DFR     (0b0000)
 #define CTRL_LO_DFR_ID  (0b0011)
@@ -142,7 +142,8 @@ xpt2046_read(uint16_t* x, uint16_t* y)
     // read Y, initiate X read
     cur_y = xpt2046_read_write(0);
     cur_y = (cur_y << 4) | (xpt2046_read_write(CTRL_HI_X | CTRL_LO_READ) >> 4);
-  } while(((prev_x != cur_x) || (prev_y != cur_y)) && (++i < XPT2046_MAX_SAMPLES));
+  //} while(((prev_x != cur_x) || (prev_y != cur_y)) && (++i < XPT2046_MAX_SAMPLES));
+  } while((++i < XPT2046_MAX_SAMPLES));
 
   // read first dummy
   (void)xpt2046_read_write(0);
@@ -177,5 +178,7 @@ xpt2046_init(uint16_t width, uint16_t height)
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
 
   // power down for IRQ
+  // I don't know why but this powerdown 
+  // causes weird IRQ behavior.
   // xpt2046_power_down();
 }
