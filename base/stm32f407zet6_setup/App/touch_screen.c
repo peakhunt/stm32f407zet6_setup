@@ -11,6 +11,7 @@
 #include "ili9341.h"
 
 #define TOUCH_SCREEN_MAX_SAMPLES    32
+#define TOUCH_SCREEN_MIN_SAMPLES    8
 
 static uint32_t _irq_count = 0;
 
@@ -27,6 +28,12 @@ touch_timer_callback(SoftTimerElem* te)
   uint16_t      adc_x, adc_y,
                 px, py;
   uint16_t      color = (0x1f << 11);
+
+  if(_sample_count < TOUCH_SCREEN_MIN_SAMPLES)
+  {
+    _sample_count = 0;
+    return;
+  }
 
   for(uint32_t i = 0; i < _sample_count; i++)
   {
