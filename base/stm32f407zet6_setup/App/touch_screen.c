@@ -24,7 +24,7 @@ touch_screen_irq_handler(uint32_t event)
 
   _irq_count++;
 
-  if(_irq_count > 2048)
+  if(_irq_count > 128)
   {
     HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
     _irq_count = 0;

@@ -4,7 +4,7 @@
 #include "dwt_stm32_delay.h"
 
 #define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
-#define XPT2046_MAX_SAMPLES           64
+#define XPT2046_MAX_SAMPLES           32
 
 #define CTRL_LO_DFR     (0b0000)
 #define CTRL_LO_DFR_ID  (0b0011)
@@ -13,6 +13,11 @@
 #define CTRL_HI_Y       (0b1101  << 4)
 
 #define CTRL_LO_READ    CTRL_LO_DFR_ID
+
+#define XPT2046_PWR_DOWN()      \
+  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);\
+  (void)xpt2046_read_write(0);\
+  (void)xpt2046_read_write(0);
 
 typedef struct
 {
@@ -106,9 +111,7 @@ xpt2046_power_down()
 {
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_RESET);
 
-  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
-  (void)xpt2046_read_write(0);
-  (void)xpt2046_read_write(0);
+  XPT2046_PWR_DOWN();
 
   // CS HIGH
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
@@ -145,9 +148,7 @@ xpt2046_read(uint16_t* x, uint16_t* y)
   (void)xpt2046_read_write(0);
 
   // read second dummy, initiate power down
-  (void)xpt2046_read_write(CTRL_HI_X | CTRL_LO_SER);
-  (void)xpt2046_read_write(0);
-  (void)xpt2046_read_write(0);
+  XPT2046_PWR_DOWN();
 
   // CS HIGH
   HAL_GPIO_WritePin(T_CS_GPIO_Port, T_CS_Pin, GPIO_PIN_SET);
