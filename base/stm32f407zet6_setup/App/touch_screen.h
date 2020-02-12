@@ -10,7 +10,7 @@ typedef enum
   touch_screen_calibration_step_done,
 } touch_screen_calibration_step_t;
 
-typedef void (*touch_screen_calibration_callback)(touch_screen_calibration_step_t step, void* arg);
+typedef void (*touch_screen_calibration_callback)(touch_screen_calibration_step_t step, uint8_t start, void* arg);
 
 extern void touch_screen_init(void);
 extern void touch_screen_start_calibration(touch_screen_calibration_callback cb, void* cb_arg);

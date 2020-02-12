@@ -21,19 +21,48 @@ static uint16_t _y_samples[TOUCH_SCREEN_MAX_SAMPLES];
 
 static SoftTimerElem _touch_timer;
 
+static uint32_t _touch_timer_interval = 1;
+
 //////////// calibration ////////////
 #define CALIBRATION_MAX_SAMPLES           16
 
 static touch_screen_calibration_callback  _cal_cb = NULL;
 static void*                              _cal_cb_arg = NULL;
-static touch_screen_calibration_step_t    _cal_step = touch_screen_calibration_step_ul;
+static touch_screen_calibration_step_t    _cal_step = touch_screen_calibration_step_done;
 static uint16_t                           _cal_x[4];
 static uint16_t                           _cal_y[4];
 static uint16_t                           _cal_x_buffer[CALIBRATION_MAX_SAMPLES];
 static uint16_t                           _cal_y_buffer[CALIBRATION_MAX_SAMPLES];
 static uint16_t                           _cal_sample_count = 0;
 static uint8_t                            _cal_progress = false;
+
+static SoftTimerElem _step_delay;
 /////////////////////////////////////
+
+static void
+touch_screen_cal_step_callback(SoftTimerElem* te)
+{
+  _cal_step++;
+
+  _cal_cb(_cal_step, true, _cal_cb_arg);    // notify start
+
+  if(_cal_step == touch_screen_calibration_step_done)
+  {
+    uint16_t adc_x0, adc_y0, adc_x1, adc_y1;
+
+    adc_x0 = (_cal_x[0] + _cal_x[2]) / 2;
+    adc_y0 = (_cal_y[0] + _cal_y[1]) / 2;
+    adc_x1 = (_cal_x[1] + _cal_x[3]) / 2;
+    adc_y1 = (_cal_y[2] + _cal_y[3]) / 2;
+
+    xpt2046_set_calibration(adc_x0, adc_y0, adc_x1, adc_y1);
+
+    _cal_progress     = false;
+    _touch_timer_interval = 1;
+
+    _cal_cb(_cal_step, false, _cal_cb_arg); // notify finish
+  }
+}
 
 static void
 touch_screen_callback(uint16_t x, uint16_t y, uint16_t adc_x, uint16_t adc_y)
@@ -51,6 +80,7 @@ touch_screen_callback(uint16_t x, uint16_t y, uint16_t adc_x, uint16_t adc_y)
     {
       uint32_t    sum_x = 0, sum_y = 0;
 
+      _cal_sample_count = 0;
       for(uint8_t i = 0; i < CALIBRATION_MAX_SAMPLES; i++)
       {
         sum_x += _cal_x_buffer[i];
@@ -60,15 +90,8 @@ touch_screen_callback(uint16_t x, uint16_t y, uint16_t adc_x, uint16_t adc_y)
       _cal_x[_cal_step] = sum_x / CALIBRATION_MAX_SAMPLES;
       _cal_y[_cal_step] = sum_y / CALIBRATION_MAX_SAMPLES;
 
-      _cal_cb(_cal_step, _cal_cb_arg);
-
-      _cal_step++;
-
-      if(_cal_step == touch_screen_calibration_step_done)
-      {
-        // calibration complete
-        // FIXME
-      }
+      _cal_cb(_cal_step, false, _cal_cb_arg);   // notify end
+      mainloop_timer_schedule(&_step_delay, 1000);
     }
   }
   else
@@ -155,7 +178,7 @@ touch_screen_irq_handler(uint32_t event)
 
   if(!is_soft_timer_running(&_touch_timer))
   {
-    mainloop_timer_schedule(&_touch_timer, 1);
+    mainloop_timer_schedule(&_touch_timer, _touch_timer_interval);
     return;
   }
 }
@@ -167,6 +190,9 @@ touch_screen_init(void)
 
   soft_timer_init_elem(&_touch_timer);
   _touch_timer.cb    = touch_timer_callback;
+
+  soft_timer_init_elem(&_step_delay);
+  _step_delay.cb = touch_screen_cal_step_callback;
 
   NVIC_DisableIRQ(T_PEN_EXTI_IRQn);
   __DSB();
@@ -191,4 +217,7 @@ touch_screen_start_calibration(touch_screen_calibration_callback cb, void* cb_ar
     _cal_x[i] = 0;
     _cal_y[i] = 0;
   }
+  _touch_timer_interval = 100;
+
+  _cal_cb(_cal_step, true, _cal_cb_arg); // notify start
 }

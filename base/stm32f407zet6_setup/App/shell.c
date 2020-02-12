@@ -10,6 +10,8 @@
 #include "shell.h"
 #include "shell_if_usb.h"
 
+#include "touch_screen.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // private definitions
@@ -37,6 +39,7 @@ typedef struct
 ////////////////////////////////////////////////////////////////////////////////
 static void shell_command_help(ShellIntf* intf, int argc, const char** argv);
 static void shell_command_version(ShellIntf* intf, int argc, const char** argv);
+static void shell_command_touch_cal(ShellIntf* intf, int argc, const char** argv);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -61,6 +64,11 @@ static ShellCommand     _commands[] =
     "version",
     "show version",
     shell_command_version,
+  },
+  {
+    "touch_cal",
+    "calibrate touch screen",
+    shell_command_touch_cal,
   },
 };
 
@@ -99,6 +107,33 @@ shell_command_version(ShellIntf* intf, int argc, const char** argv)
 {
   shell_printf(intf, "\r\n");
   shell_printf(intf, "%s\r\n", VERSION);
+}
+
+static void
+touch_calibration_cb(touch_screen_calibration_step_t step, uint8_t start, void* arg)
+{
+  static const char* step_names[] = 
+  {
+    "upper left corner",
+    "upper right corner",
+    "bottom left corner",
+    "bottom right corne",
+    "finishing calibration ",
+  };
+
+  ShellIntf* intf = (ShellIntf*)arg;
+
+  shell_printf(intf, "\r\n");
+  shell_printf(intf, "%s %s\r\n", step_names[step], start ? "start" : "done");
+}
+
+static void
+shell_command_touch_cal(ShellIntf* intf, int argc, const char** argv)
+{
+  shell_printf(intf, "\r\n");
+  shell_printf(intf, "starting touch screen calibration\r\n");
+
+  touch_screen_start_calibration(touch_calibration_cb, (void*)intf);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
