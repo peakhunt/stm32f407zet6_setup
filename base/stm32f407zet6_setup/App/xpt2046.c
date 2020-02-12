@@ -4,7 +4,7 @@
 #include "dwt_stm32_delay.h"
 
 #define XPT2046_SPI_DELAY(x)         HAL_Delay(x)
-#define XPT2046_MAX_SAMPLES         2
+#define XPT2046_MAX_SAMPLES         3
 
 #define CTRL_LO_DFR     (0b0000)
 #define CTRL_LO_DFR_ID  (0b0011)

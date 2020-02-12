@@ -11,7 +11,7 @@
 #include "ili9341.h"
 
 #define TOUCH_SCREEN_MAX_SAMPLES    32
-#define TOUCH_SCREEN_MIN_SAMPLES    8
+#define TOUCH_SCREEN_MIN_SAMPLES    6
 
 static uint32_t _irq_count = 0;
 
