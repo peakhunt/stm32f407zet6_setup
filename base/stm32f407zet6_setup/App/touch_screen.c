@@ -21,13 +21,68 @@ static uint16_t _y_samples[TOUCH_SCREEN_MAX_SAMPLES];
 
 static SoftTimerElem _touch_timer;
 
+//////////// calibration ////////////
+#define CALIBRATION_MAX_SAMPLES           16
+
+static touch_screen_calibration_callback  _cal_cb = NULL;
+static void*                              _cal_cb_arg = NULL;
+static touch_screen_calibration_step_t    _cal_step = touch_screen_calibration_step_ul;
+static uint16_t                           _cal_x[4];
+static uint16_t                           _cal_y[4];
+static uint16_t                           _cal_x_buffer[CALIBRATION_MAX_SAMPLES];
+static uint16_t                           _cal_y_buffer[CALIBRATION_MAX_SAMPLES];
+static uint16_t                           _cal_sample_count = 0;
+static uint8_t                            _cal_progress = false;
+/////////////////////////////////////
+
+static void
+touch_screen_callback(uint16_t x, uint16_t y, uint16_t adc_x, uint16_t adc_y)
+{
+  uint16_t      color = (0x1f << 11);
+
+  if(_cal_progress)
+  {
+    _cal_x_buffer[_cal_sample_count] = adc_x;
+    _cal_y_buffer[_cal_sample_count] = adc_y;
+
+    _cal_sample_count++;
+
+    if(_cal_sample_count >= CALIBRATION_MAX_SAMPLES)
+    {
+      uint32_t    sum_x = 0, sum_y = 0;
+
+      for(uint8_t i = 0; i < CALIBRATION_MAX_SAMPLES; i++)
+      {
+        sum_x += _cal_x_buffer[i];
+        sum_y += _cal_y_buffer[i];
+      }
+
+      _cal_x[_cal_step] = sum_x / CALIBRATION_MAX_SAMPLES;
+      _cal_y[_cal_step] = sum_y / CALIBRATION_MAX_SAMPLES;
+
+      _cal_cb(_cal_step, _cal_cb_arg);
+
+      _cal_step++;
+
+      if(_cal_step == touch_screen_calibration_step_done)
+      {
+        // calibration complete
+        // FIXME
+      }
+    }
+  }
+  else
+  {
+    ili9341_write_pixel(x, y, color);
+  }
+}
+
 static void
 touch_timer_callback(SoftTimerElem* te)
 {
   uint32_t      sum_x = 0, sum_y = 0;
   uint16_t      adc_x, adc_y,
                 px, py;
-  uint16_t      color = (0x1f << 11);
 
   if(_sample_count < TOUCH_SCREEN_MIN_SAMPLES)
   {
@@ -45,9 +100,9 @@ touch_timer_callback(SoftTimerElem* te)
   adc_y = (uint16_t)(sum_y / _sample_count);
 
   xpt2046_calc_point(adc_x, adc_y, &px, &py);
-  ili9341_write_pixel(px, py, color);
-
   _sample_count = 0;
+
+  touch_screen_callback(px, py, adc_x, adc_y);
 }
 
 static void
@@ -120,4 +175,20 @@ touch_screen_init(void)
   xpt2046_init(240, 320);
 
   NVIC_EnableIRQ(T_PEN_EXTI_IRQn);
+}
+
+void
+touch_screen_start_calibration(touch_screen_calibration_callback cb, void* cb_arg)
+{
+  _cal_step         = touch_screen_calibration_step_ul;
+  _cal_progress     = true;
+  _cal_cb           = cb;
+  _cal_cb_arg       = cb_arg;
+  _cal_sample_count = 0;
+
+  for(uint8_t i = 0; i < 4; i++)
+  {
+    _cal_x[i] = 0;
+    _cal_y[i] = 0;
+  }
 }
