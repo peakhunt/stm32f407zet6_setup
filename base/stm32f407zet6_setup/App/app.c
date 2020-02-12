@@ -8,6 +8,7 @@
 #include "lcd_driver.h"
 #include "touch_screen.h"
 #include "blinky.h"
+#include "shell.h"
 
 #include "dwt_stm32_delay.h"
 
@@ -25,6 +26,8 @@ app_init_r(void)
   lcd_driver_init();
   touch_screen_init();
   blinky_init();
+
+  shell_init();
 }
 
 void
