@@ -21,10 +21,9 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "usbd_cdc_if.h"
-#include "shell_if_usb.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "shell_if_usb.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
