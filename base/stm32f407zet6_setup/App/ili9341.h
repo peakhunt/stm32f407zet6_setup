@@ -74,8 +74,8 @@
 #define ILI9341_PRC            0xF7   /* Pump ratio control register */
 
 //-----------------------------------------------------------------------------
-#define ILI9341_MAD_RGB        0x08
-#define ILI9341_MAD_BGR        0x00
+#define ILI9341_MAD_RGB        0x00
+#define ILI9341_MAD_BGR        0x08
 
 #define ILI9341_MAD_VERTICAL   0x20
 #define ILI9341_MAD_X_LEFT     0x00
@@ -83,7 +83,7 @@
 #define ILI9341_MAD_Y_UP       0x80
 #define ILI9341_MAD_Y_DOWN     0x00
 
-#define ILI9341_MAD_COLORMODE  ILI9341_MAD_RGB
+#define ILI9341_MAD_COLORMODE  ILI9341_MAD_BGR
 
 #define ILI9341_SIZE_X                     ILI9341_LCD_PIXEL_WIDTH
 #define ILI9341_SIZE_Y                     ILI9341_LCD_PIXEL_HEIGHT
@@ -100,5 +100,18 @@
 
 extern void ili9341_init_lcd(void);
 extern void ili9341_write_pixel(uint16_t x, uint16_t y, uint16_t rgb);
+extern void ili9341_prepare_frame_update(uint16_t x, uint16_t y);
+extern void ili9341_write_pixel_multi(uint16_t x, uint16_t y, uint16_t* colors, uint32_t len);
+extern void ili9341_prepare_frame_continue(void);
+
+#define LCD_BASE_ADDRESS        0x6C000000
+#define LCD_ADDRESS_6           (1 << (6 + 1))
+// BANK-1 CS4 with FMC_ADDR6 high
+#define LCD_DATA_ADDRESS        (LCD_BASE_ADDRESS | LCD_ADDRESS_6)
+// BANK-1 CS4 with FMC_ADDR6 low
+#define LCD_COMMAND_ADDRESS     (LCD_BASE_ADDRESS)
+
+#define LCD_REG     ((volatile uint16_t*)LCD_COMMAND_ADDRESS)
+#define LCD_DAT     ((volatile uint16_t*)LCD_DATA_ADDRESS)
 
 #endif /* !__ILI9341_DEF_H__ */

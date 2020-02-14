@@ -7,22 +7,30 @@
 #include "event_list.h"
 #include "ili9341.h"
 
-#define REFRESH_INTERVAL         30      // 30 FPS is target
+#define REFRESH_INTERVAL         41      // 24 FPS is target
 
-#define LCD_WIDTH     240
-#define LCD_HEIGHT    320
+#define LCD_WIDTH     ILI9341_LCD_PIXEL_WIDTH
+#define LCD_HEIGHT    ILI9341_LCD_PIXEL_HEIGHT
 
 typedef struct
 {
-  uint16_t      frame[LCD_WIDTH][LCD_HEIGHT];
+  volatile uint16_t         buffer[LCD_HEIGHT*LCD_WIDTH];
 } lcd_frame_t;
 
 static SoftTimerElem    _fps_timer;
-static lcd_frame_t*     _frame_mem = (lcd_frame_t*)(0x68000000);
+
+static volatile lcd_frame_t*     _frame_mem_r = (lcd_frame_t*)(0x68000000U + sizeof(lcd_frame_t) * 0);
+static volatile lcd_frame_t*     _frame_mem_g = (lcd_frame_t*)(0x68000000U + sizeof(lcd_frame_t) * 1);
+static volatile lcd_frame_t*     _frame_mem_b = (lcd_frame_t*)(0x68000000U + sizeof(lcd_frame_t) * 2);
+static volatile lcd_frame_t*     _frame_mem;
 
 /////////////// for DMA ///////////////
-static DMA_HandleTypeDef* _dma_handle = &hdma_memtomem_dma2_stream0;
+static DMA_HandleTypeDef* _dma_handle = &hdma_memtomem_dma2_stream7;
+static uint8_t  _dma_in_prog = false;
+static uint8_t  _dma_step = 0;
 ///////////////////////////////////////
+
+static void lcd_dma_test(void);
 
 //
 // XXX
@@ -34,9 +42,45 @@ static void lcd_frame_dma_complete_irq(DMA_HandleTypeDef *DmaHandle)
 }
 
 static void
+lcd_frame_do_dma(void)
+{
+  uint32_t offset;
+  uint32_t len;
+
+  len = LCD_WIDTH * LCD_HEIGHT / 2;
+
+  if(_dma_step == 0)
+  {
+    offset = 0;
+    ili9341_prepare_frame_update(0, 0);
+  }
+  else
+  {
+    offset = LCD_WIDTH * LCD_HEIGHT / 2;
+    ili9341_prepare_frame_update(0, LCD_HEIGHT / 2);
+  }
+
+  if(HAL_DMA_Start_IT(_dma_handle, (uint32_t)&_frame_mem->buffer[offset], (uint32_t)LCD_DAT, len) != HAL_OK)
+  {
+    /* Transfer Error */
+    while(1)
+      ;
+  }
+}
+
+static void
 lcd_frame_dma_complete(uint32_t event)
 {
-  // FIXME
+  if(_dma_step == 0)
+  {
+    _dma_step++;
+    lcd_frame_do_dma();
+  }
+  else
+  {
+    _dma_in_prog = false;
+    _dma_step = 0;
+  }
 }
 
 static void
@@ -46,75 +90,78 @@ lcd_frame_dma_init(void)
   event_register_handler(lcd_frame_dma_complete, DISPATCH_EVENT_LCD_DMA_COMPLETE);
 }
 
-void
+static void
 lcd_frame_dma_start(void)
 {
-#if 0
-  if(HAL_DMA_Start_IT(&DmaHandle, (uint32_t)&aSRC_Const_Buffer, (uint32_t)&aDST_Buffer, BUFFER_SIZE) != HAL_OK)
+  _dma_in_prog = true;
+  _dma_step = 0;
+
+  lcd_frame_do_dma();
+}
+
+static void
+lcd_dma_test(void)
+{
+  static uint8_t step = 0;
+
+  switch(step)
   {
-    /* Transfer Error */
-    Error_Handler();
+  case 0:
+    _frame_mem = _frame_mem_r;
+    step = 1;
+    break;
+  case 1:
+    _frame_mem = _frame_mem_g;
+    step = 2;
+    break;
+  case 2:
+    _frame_mem = _frame_mem_b;
+    step = 0;
+    break;
   }
-#endif
+
+  lcd_frame_dma_start();
 }
 
 static void
 lcd_test_by_fill(SoftTimerElem* te)
 {
-  uint16_t col, row;
-  static uint16_t r = 0,
-                  g = 0,
-                  b = 0;
-  uint16_t color = 0x0;
-
-  // mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
-
-  color = (r << 11) | (g << 5) | b;
-
-  for(row = 0; row < 320; row++)
+  if(_dma_in_prog == false)
   {
-    for(col = 0; col < 240; col++)
-    {
-      //
-      // 5-6-5 format
-      // 5 : 0x1F
-      // 6 : 0x3F
-      //
-      ili9341_write_pixel(col, row, color);
-    }
+    lcd_dma_test();
   }
-
-  if(r < 0x1f)
-  {
-    r++;
-    return;
-  }
-
-  if(g < 0x3f)
-  {
-    g++;
-    return;
-  }
-
-  if(b < 0x1f)
-  {
-    b++;
-    return;
-  }
-
-  r = g = b = 0;
+  mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
 }
 
 static void
 lcd_frame_memory_init(void)
 {
   uint16_t    x, y;
+  uint32_t    ndx;
+  const uint16_t    r = 0x001f << 11 | 0x0000 << 5 | 0x0000,
+                    g = 0x0000 << 11 | 0x003f << 5 | 0x0000,
+                    b = 0x0000 << 11 | 0x0000 << 5 | 0x001f;
 
   for(y = 0; y < LCD_HEIGHT; y++)
   {
     for(x = 0; x < LCD_WIDTH; x++)
     {
-      _frame_mem->frame[x][y] = 0x0;
+      ndx = y * LCD_WIDTH + x;
+      _frame_mem_r->buffer[ndx] = r;
+      _frame_mem_g->buffer[ndx] = g;
+      _frame_mem_b->buffer[ndx] = b;
+    }
+  }
+
+  for(y = 0; y < LCD_HEIGHT; y++)
+  {
+    for(x = 0; x < LCD_WIDTH; x++)
+    {
+      ndx = y * LCD_WIDTH + x;
+
+      if(_frame_mem_r->buffer[ndx] != r) while(1);
+      if(_frame_mem_g->buffer[ndx] != g) while(1);
+      if(_frame_mem_b->buffer[ndx] != b) while(1);
     }
   }
 }
@@ -122,9 +169,6 @@ lcd_frame_memory_init(void)
 void
 lcd_driver_init(void)
 {
-  uint16_t color = 0x3f << 5;
-  uint16_t i;
-
   ili9341_init_lcd();
 
   lcd_frame_memory_init();
@@ -132,19 +176,6 @@ lcd_driver_init(void)
 
   soft_timer_init_elem(&_fps_timer);
   _fps_timer.cb    = lcd_test_by_fill;
-  // mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
 
-  lcd_test_by_fill(NULL);
-
-  for(i = 10; i < (240 -10); i++)
-  {
-    ili9341_write_pixel(i, 10, color);
-    ili9341_write_pixel(i, 320 - 10, color);
-  }
-
-  for(i = 10; i < (320 - 10); i++)
-  {
-    ili9341_write_pixel(240 - 10, i, color);
-    ili9341_write_pixel(10, i, color);
-  }
+  mainloop_timer_schedule(&_fps_timer, REFRESH_INTERVAL);
 }

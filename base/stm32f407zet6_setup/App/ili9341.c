@@ -1,16 +1,6 @@
 #include "stm32f4xx_hal.h"
 #include "ili9341.h"
 
-#define LCD_BASE_ADDRESS        0x6C000000
-#define LCD_ADDRESS_6           (1 << (6 + 1))
-// BANK-1 CS4 with FMC_ADDR6 high
-#define LCD_DATA_ADDRESS        (LCD_BASE_ADDRESS | LCD_ADDRESS_6)
-// BANK-1 CS4 with FMC_ADDR6 low
-#define LCD_COMMAND_ADDRESS     (LCD_BASE_ADDRESS)
-
-#define LCD_REG     ((volatile uint16_t*)LCD_COMMAND_ADDRESS)
-#define LCD_DAT     ((volatile uint16_t*)LCD_DATA_ADDRESS)
-
 static void
 lcd_write_cmd8(uint8_t cmd)
 {
@@ -40,7 +30,9 @@ lcd_write_cmd_multiple(uint8_t cmd, uint8_t* data, uint32_t size)
   }
 }
 
-#define LCD_IO_WriteData16_to_2x8(dt)    {lcd_write_data8((dt) >> 8); lcd_write_data8(dt); }
+#define LCD_IO_WriteData16_to_2x8(dt)     \
+  lcd_write_data8((uint8_t)((dt) >> 8));  \
+  lcd_write_data8((uint8_t)(dt));
 
 void
 ili9341_init_lcd(void)
@@ -100,4 +92,69 @@ ili9341_write_pixel(uint16_t x, uint16_t y, uint16_t rgb)
   // set pixel
   lcd_write_cmd8(ILI9341_RAMWR);
   lcd_write_data16(rgb);
+}
+
+void
+ili9341_write_pixel_multi(uint16_t x, uint16_t y, uint16_t* colors, uint32_t len)
+{
+#if 1
+  // uint16_t color = 0x001f << 11 | 0x0000 << 5 | 0x0000;
+
+  // set cursor
+  lcd_write_cmd8(ILI9341_CASET);
+  LCD_IO_WriteData16_to_2x8(0);
+  LCD_IO_WriteData16_to_2x8(ILI9341_LCD_PIXEL_WIDTH - 1);
+
+  lcd_write_cmd8(ILI9341_PASET);
+  LCD_IO_WriteData16_to_2x8(0);
+  LCD_IO_WriteData16_to_2x8(ILI9341_LCD_PIXEL_HEIGHT - 1);
+
+  lcd_write_cmd8(ILI9341_RAMWR);
+
+#if 0
+  // FSMC timing conflict test
+  for(uint32_t i = 0; i < len; i++)
+  {
+    if(colors[i] != color)
+    {
+      while(1);
+    }
+  }
+#endif
+
+  for(uint32_t i = 0; i < len; i++)
+  {
+    *LCD_DAT = colors[i];
+  }
+
+#else
+  for(uint32_t y = 0; y < ILI9341_LCD_PIXEL_HEIGHT; y++)
+  {
+    for(uint32_t x = 0; x < ILI9341_LCD_PIXEL_WIDTH; x++)
+    {
+      ili9341_write_pixel(x, y, colors[x + y * ILI9341_LCD_PIXEL_WIDTH]);
+    }
+  }
+#endif
+}
+
+void
+ili9341_prepare_frame_update(uint16_t x, uint16_t y)
+{
+  // set cursor
+  lcd_write_cmd8(ILI9341_CASET);
+  LCD_IO_WriteData16_to_2x8(x);
+  LCD_IO_WriteData16_to_2x8(ILI9341_LCD_PIXEL_WIDTH);
+
+  lcd_write_cmd8(ILI9341_PASET);
+  LCD_IO_WriteData16_to_2x8(y);
+  LCD_IO_WriteData16_to_2x8(ILI9341_LCD_PIXEL_HEIGHT);
+
+  lcd_write_cmd8(ILI9341_RAMWR);
+}
+
+void
+ili9341_prepare_frame_continue(void)
+{
+  lcd_write_cmd8(0x3c);
 }
